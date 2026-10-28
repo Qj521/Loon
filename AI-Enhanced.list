@@ -51,6 +51,12 @@ DOMAIN-SUFFIX,geller-pa.googleapis.com
 DOMAIN-SUFFIX,gemini.google
 DOMAIN-SUFFIX,gemini.google.com
 DOMAIN-SUFFIX,generativeai.google
+DOMAIN-SUFFIX,googleapis.com
+DOMAIN-KEYWORD,gemini
+DOMAIN-KEYWORD,bard
+DOMAIN-KEYWORD,generativelanguage
+DOMAIN-KEYWORD,aistudio
+DOMAIN-KEYWORD,makersuite
 DOMAIN-SUFFIX,generativelanguage.googleapis.com
 DOMAIN-SUFFIX,grok.com
 DOMAIN-SUFFIX,groq.com
