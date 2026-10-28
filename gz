@@ -1,0 +1,21 @@
+#!name=瓜子影视去广告
+#!desc=只去广告，保留底部入口，不影响体育频道 | 原作者 ddgksf2013
+#!author=ddgksf2013
+#!homepage=https://github.com/Qj521/Egern
+#!icon=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Streaming.png
+
+[Rewrite]
+# 独立广告数据（已排除 sportAdInfo）
+^https:\/\/(?:api|sdapi|newapi|hyperf|oldapi)\.[a-z0-9]+\.com\/App\/(?:Ad\/(?:activityInfo|bannerInfo|bardCacheAdInfo|barsIndexAdInfo|barsPlayAdInfo|barsUserAdInfo|comicAdInfo|liveEventAdInfo|noticeInfo|novelAdInfo|novelReaderAdInfo|playAdInfo|playGuidePopup|skitAdInfo|splashInfo|vajraInfo)|ad\/(?:trafficNavigationInfo|vajraList)) url reject-dict
+
+# 首页悬浮广告
+^https:\/\/(?:api|sdapi|newapi|hyperf|oldapi)\.[a-z0-9]+\.com\/App\/IndexList\/homeFloatAd url reject-dict
+
+# 评论区广告
+^https:\/\/(?:api|sdapi|newapi|hyperf|oldapi)\.[a-z0-9]+\.com\/App\/Resource\/CommentAd\/show url reject-dict
+
+# 播放页跑马灯广告
+^https:\/\/(?:api|sdapi|newapi|hyperf|oldapi)\.[a-z0-9]+\.com\/App\/IndexPlay\/vodAdvertisement url reject-dict
+
+[MITM]
+hostname = api.mxtxqe.com, api.sef5w7.com, sdapi.u4gdp3.com, sdapi.4zu76s.com, sdapi.re3k7n.com, api.xqe4cxu.com, api.syq8gvw.com, api.zjypp7x.com, sdapi.6ne6zmh.com, sdapi.g4k74qn.com, sdapi.tymnpk4.com, sdapi.use3p2m.com, api.7gmsut2m.com, api.tkfupxqu.com, api.5h5hbfhh.com, api.qchyzkww.com, api.cjxxpgkq.com, api.rqqakqyn.com, api.tezpgdzn.com, api.bmjb2mk7.com, api.46d5umpk.com, newapi.kanshipinaxsdf.com, hyperf.718fd9f.com, oldapi.0673ddc.com
