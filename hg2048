@@ -1,0 +1,12 @@
+#!name=黄果/2048AI去广告
+#!desc=隐藏 huangguo.video、huangguoai.com 页面内的广告位，并拦截 2048ai.vip 的广告 / AI精选配置接口
+#!author=Custom
+#!homepage=https://github.com/Qj521/Egern
+#!icon=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Advertising.png
+
+[Rewrite]
+# 拦截广告 / AI精选配置接口（返回空字典）
+^https://2048ai\.vip/api/v1/(?:ads|ai-selection/config) url reject-dict
+
+[MITM]
+hostname = huangguo.video, huangguoai.com, 2048ai.vip
