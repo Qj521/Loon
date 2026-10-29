@@ -1,55 +1,84 @@
-// X/Twitter ad-filter prototype for Loon
-// Conservative behavior: only edits parseable JSON and removes objects with explicit promotion markers.
-// Not tested against live X responses; API structures change frequently.
-function walk(value) {
-  if (Array.isArray(value)) {
-    return value
-      .filter(item => !isPromoted(item))
-      .map(item => walk(item));
-  }
-  if (value && typeof value === "object") {
-    const out = {};
-    for (const [key, child] of Object.entries(value)) {
-      if (Array.isArray(child)) {
-        out[key] = child.filter(item => !isPromoted(item)).map(item => walk(item));
-      } else {
-        out[key] = walk(child);
-      }
-    }
-    return out;
-  }
-  return value;
-}
+// X/Twitter promoted timeline entry filter for Loon.
+// Prototype: X changes its GraphQL response schema frequently.
+// It only edits valid JSON responses and otherwise leaves the response untouched.
 
-function isPromoted(obj) {
-  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return false;
-  const trueFlags = ["isPromoted", "is_promoted", "promoted", "is_promoted_content"];
-  for (const key of trueFlags) {
-    if (obj[key] === true) return true;
-  }
-  const markerKeys = [
-    "promotedMetadata", "promoted_metadata", "promotedTrend", "promoted_trend",
-    "promotedContent", "promoted_content"
-  ];
-  for (const key of markerKeys) {
-    if (obj[key] !== undefined && obj[key] !== null && obj[key] !== false && obj[key] !== "") return true;
-  }
-  if (typeof obj.__typename === "string") {
-    const t = obj.__typename.toLowerCase();
-    if (t.includes("promotedtweet") || t.includes("promotedtrend") || t.includes("promotedaccount")) return true;
+const PROMOTION_KEYS = new Set([
+  "promotedMetadata",
+  "promoted_metadata",
+  "promotedTweet",
+  "promoted_tweet",
+  "promotedContent",
+  "promoted_content",
+  "promotedTrend",
+  "promoted_trend",
+  "promotedAccount",
+  "promoted_account"
+]);
+
+function hasPromotionMarker(node, depth = 0) {
+  if (!node || typeof node !== "object" || depth > 12) return false;
+
+  if (node.isPromoted === true ||
+      node.is_promoted === true ||
+      node.is_promoted_content === true ||
+      node.promoted === true) return true;
+
+  if (typeof node.__typename === "string" &&
+      /promoted(tweet|trend|account|content)/i.test(node.__typename)) return true;
+
+  for (const [key, value] of Object.entries(node)) {
+    if (PROMOTION_KEYS.has(key) && value !== null && value !== false &&
+        value !== "" && !(Array.isArray(value) && value.length === 0)) {
+      return true;
+    }
   }
   return false;
 }
 
+// Detect a marker anywhere inside a candidate timeline entry.
+function containsPromotion(node, depth = 0) {
+  if (!node || typeof node !== "object" || depth > 16) return false;
+  if (hasPromotionMarker(node)) return true;
+  for (const value of Object.values(node)) {
+    if (value && typeof value === "object" && containsPromotion(value, depth + 1)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function clean(node, parentKey = "", depth = 0) {
+  if (depth > 40 || node === null || typeof node !== "object") return node;
+
+  if (Array.isArray(node)) {
+    // Only filter entries in arrays that look like X timeline entry collections.
+    const isTimelineArray = /entries|items|addentries|replaceentry/i.test(parentKey);
+    const kept = isTimelineArray
+      ? node.filter(item => !containsPromotion(item))
+      : node;
+    return kept.map(item => clean(item, parentKey, depth + 1));
+  }
+
+  const result = {};
+  for (const [key, value] of Object.entries(node)) {
+    // Some response variants store promoted timeline entries under an entry wrapper.
+    if (/^entry$/i.test(key) && value && typeof value === "object" && containsPromotion(value)) {
+      continue;
+    }
+    result[key] = clean(value, key, depth + 1);
+  }
+  return result;
+}
+
 try {
-  const body = $response.body;
-  if (typeof body !== "string" || !body.length) {
+  if (typeof $response.body !== "string" || !$response.body.length) {
     $done({});
   } else {
-    const parsed = JSON.parse(body);
-    $done({ body: JSON.stringify(walk(parsed)) });
+    const data = JSON.parse($response.body);
+    const filtered = clean(data);
+    $done({ body: JSON.stringify(filtered) });
   }
-} catch (e) {
-  // If the response is not JSON or parsing fails, leave it untouched.
+} catch (_) {
+  // Preserve the original response if it is not valid JSON.
   $done({});
 }
